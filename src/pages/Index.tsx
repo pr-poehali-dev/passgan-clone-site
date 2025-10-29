@@ -21,6 +21,8 @@ const Index = () => {
   const [checkPassword, setCheckPassword] = useState('');
   const [breachCount, setBreachCount] = useState<number | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
   const { toast } = useToast();
 
   const generatePassword = () => {
@@ -170,6 +172,85 @@ const Index = () => {
     }
   };
 
+  const processAiRequest = () => {
+    if (!aiPrompt.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите описание для ИИ',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAiProcessing(true);
+
+    setTimeout(() => {
+      const prompt = aiPrompt.toLowerCase();
+      
+      // Анализ запроса и настройка параметров
+      if (prompt.includes('короткий') || prompt.includes('простой') || prompt.includes('легкий')) {
+        setLength([8]);
+        setSymbols(false);
+      } else if (prompt.includes('длинный') || prompt.includes('сложный') || prompt.includes('максимальн')) {
+        setLength([32]);
+        setUppercase(true);
+        setLowercase(true);
+        setNumbers(true);
+        setSymbols(true);
+      } else if (prompt.includes('банк') || prompt.includes('финанс') || prompt.includes('деньги') || prompt.includes('карт')) {
+        setLength([20]);
+        setUppercase(true);
+        setLowercase(true);
+        setNumbers(true);
+        setSymbols(true);
+      } else if (prompt.includes('соцсет') || prompt.includes('инстаграм') || prompt.includes('вконтакт') || prompt.includes('телеграм')) {
+        setLength([16]);
+        setUppercase(true);
+        setLowercase(true);
+        setNumbers(true);
+        setSymbols(false);
+      } else if (prompt.includes('игр') || prompt.includes('steam') || prompt.includes('роблокс') || prompt.includes('roblox')) {
+        setLength([14]);
+        setUppercase(true);
+        setLowercase(true);
+        setNumbers(true);
+        setSymbols(false);
+      } else if (prompt.includes('wifi') || prompt.includes('wi-fi') || prompt.includes('роутер')) {
+        setLength([16]);
+        setUppercase(true);
+        setLowercase(true);
+        setNumbers(true);
+        setSymbols(false);
+      } else if (prompt.includes('без символ') || prompt.includes('только букв')) {
+        setSymbols(false);
+        setNumbers(false);
+        setLength([16]);
+      } else if (prompt.includes('только цифр')) {
+        setUppercase(false);
+        setLowercase(false);
+        setSymbols(false);
+        setNumbers(true);
+        setLength([8]);
+      } else {
+        // Стандартный надёжный пароль
+        setLength([16]);
+        setUppercase(true);
+        setLowercase(true);
+        setNumbers(true);
+        setSymbols(true);
+      }
+
+      setIsAiProcessing(false);
+      toast({
+        title: '✓ Настройки применены',
+        description: 'ИИ настроил генератор под ваш запрос',
+      });
+      
+      // Автоматическая генерация после настройки
+      setTimeout(() => generatePassword(), 100);
+    }, 800);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-4xl grid gap-6 md:grid-cols-2">
@@ -182,6 +263,35 @@ const Index = () => {
               <h1 className="text-4xl font-bold text-foreground">PassGan</h1>
               <p className="text-muted-foreground">Генератор надёжных паролей</p>
             </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Icon name="Sparkles" size={16} className="text-primary" />
+              <span className="font-medium">ИИ-помощник</span>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="Например: для банка, простой пароль, только цифры..."
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                className="flex-1 bg-secondary border-border"
+                onKeyDown={(e) => e.key === 'Enter' && processAiRequest()}
+              />
+              <Button
+                onClick={processAiRequest}
+                disabled={isAiProcessing}
+                size="icon"
+                className="shrink-0 bg-primary hover:bg-primary/90"
+              >
+                {isAiProcessing ? (
+                  <Icon name="Loader2" size={18} className="animate-spin" />
+                ) : (
+                  <Icon name="Wand2" size={18} />
+                )}
+              </Button>
+            </div>
+          </div>
 
           <div className="space-y-4">
             <div className="relative">
